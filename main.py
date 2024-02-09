@@ -1,16 +1,15 @@
+import config
 from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI, BackgroundTasks
 import base64
-# from Recognizer.utils.logging import logging
 
-import config
+from Recognizer.utils.db_api.db_worker import db
 from Recognizer.utils.logging import logging
 
 from Recognizer.get_audio_file import getting_audiofile
-#from Classifier.engine.classification import define_category
-from Recognizer.audio_recognition import offline_recognition
 from Recognizer.get_audio_file import del_audio_file
+from Recognizer.audio_recognition import offline_recognition
 
 from Recognizer.utils.pre_start_init import auth_token
 from Recognizer.models import AsyncAudioRequestNewTask, AsyncAudioRequestGetResult
@@ -87,7 +86,7 @@ async def async_audio_recognise_new_task(new_async_task: AsyncAudioRequestNewTas
                 State.request_data[task_id]['state'] = 'received_file_to_recognise'
             else:
                 State.request_data[task_id]['state'] = 'failed_to_receive_file_to_recognise'
-
+                error_description = State.request_data[task_id]['state']
     if have_file:
         # В функции не забыть удалить файл
         background_tasks.add_task(offline_recognition,
@@ -97,6 +96,7 @@ async def async_audio_recognise_new_task(new_async_task: AsyncAudioRequestNewTas
                                   task_id=task_id,
                                   state=State)
         State.request_data[task_id]['error'] = False
+        await db.add_order_to_base(task_id)
         error = False
 
     response = {"error": error,

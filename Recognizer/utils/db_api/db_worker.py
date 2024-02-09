@@ -3,13 +3,14 @@ import os
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.sql import and_, or_
 from Recognizer.utils.pre_start_init import paths
+from Recognizer.models.db_models import Order, Recognitions
+from Recognizer import LongTimeWorker
 
 # import pymysql
 from sqlalchemy import select, delete, create_engine, MetaData, Table, Integer, String, \
     Column, DateTime, ForeignKey, Numeric, SmallInteger, Boolean, sql, func, update, desc
 
 import config
-from Recognizer.models.db_models import Order, Recognitions
 from datetime import datetime, timedelta
 
 
@@ -20,63 +21,37 @@ class DataBase:
         self.session = Session(bind=self.engine)
 
     def set_db_path(self):
-        base_folder = os.getcwd()
         db = 'sqlite:///' + str(paths.get("db"))
         # db = 'mysql+pymysql://akojevnikov:zb5vdbpH0LL1Hxk8@192.168.94.61/kojevnikov_db'
-        return base_folder  # db
+        return db  # db
 
     async def add_order_to_base(self, data):
-        """ Мы получаем dict(data) {'login': 'login', 'password':'password', 'acc_t': 'token'} """
-        # todo - проверить, есть ли супплаер с номером в базе по его token. Прекращать, если нет.
         with self.session as sess:
-            data['inserted'] = datetime.now()
-            data['next_check_date'] = datetime.now()
-            data['auth_json_data'] = {
-                "cookies": [
-                    {
-                        "name": "acc_t",
-                        "value": data.get('acc_t'),
-                        "domain": ".gosuslugi.ru",
-                        "path": "/",
-                        "expires": datetime.strptime(data.get('expire_at'), "%Y-%m-%d %H:%M:%S").timestamp(),
-                        "httpOnly": False,
-                        "secure": False,
-                        "sameSite": "Lax"
-                    },
-                    {
-                        "name": "u",
-                        "value": data.get('oid'),
-                        "domain": ".gosuslugi.ru",
-                        "path": "/",
-                        "expires": -1,
-                        "httpOnly": False,
-                        "secure": False,
-                        "sameSite": "Lax"
-                    },
-                    {
-                        "name": "ESIA_SESSION",
-                        "value": "0e89acb6-b16c-e756-6f73-67d5ef708f21",
-                        "domain": "esia.gosuslugi.ru",
-                        "path": "/",
-                        "expires": datetime.strptime(data.get('expire_at'), "%Y-%m-%d %H:%M:%S").timestamp(),
-                        "httpOnly": True,
-                        "secure": True,
-                        "sameSite": "Lax"
-                    },
-                ],
-                "origins": [
-                ]
-            }
-            # Удаляем ключи, которых нет в модели Orders
-            data.pop('acc_t', None)
-            data.pop('expire_at', None)
-            data.pop('oid', None)
+            u_id = data
+            orders_data = LongTimeWorker.State.request_data[u_id]
+            new_order = Order(
+                u_id=u_id,
+                erp_id=orders_data.get(""),
+                file_url=orders_data.get("file_url").unicode_string(),
+                state=orders_data.get("state"),
+                inserted=datetime.now(),
+                updated=datetime.now(),
+            )
 
-            for sym in Order.items:
-                data[sym] = data.get(sym, None)  # Если в ответе нет подходящего ключа, заменяем его на None
-                order = Order(**data)
-            sess.add(order)
+            user_exist = sess.query(Order).filter(Order.u_id == u_id)
 
+            if sess.query(user_exist.exists()).scalar():
+                user_exist.update(
+                    {
+                        'u_id': u_id,
+                        'erp_id': orders_data.get(""),
+                        'file_url': orders_data.get("file_url").unicode_string(),
+                        'state': orders_data.get("state"),
+                        'updated': datetime.now(),
+                    },
+                    synchronize_session='fetch')
+            else:
+                sess.add(new_order)
             try:
                 sess.commit()
                 sess.close()

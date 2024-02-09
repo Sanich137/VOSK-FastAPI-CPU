@@ -7,8 +7,13 @@ from Recognizer.utils.pre_start_init import paths
 
 async def getting_audiofile(file_url) -> bool:
     res = False
-    temp_file_path = paths.get("audio_archive_folder") / file_url.path.split('/')[-1]
-    get_file_url = file_url.unicode_string()
+    file_name = file_url.path.split('/')[-1]
+    if 'mp3' in file_name:
+        temp_file_path = paths.get("audio_archive_folder") / file_name
+        get_file_url = file_url.unicode_string()
+    else:
+        return res
+
     if temp_file_path.exists():
         logging.info(f"Файл {file_url.path.split('/')[-1]} уже получен, будет использован ранее полученный файл.")
         res = temp_file_path

@@ -4,7 +4,7 @@ from datetime import datetime as dt
 
 
 
-class StateAudioClassifier():
+class StateAudioClassifier:
     def __init__(self):
         self.request_limit = buffer_size
         self.request_data = dict()
@@ -38,12 +38,10 @@ class StateAudioClassifier():
         # добавить в реестр
         if error == "0":
             self.request_data[unique_id] = dict(
-                {
-                    "file_url": file_url,
-                    "start_date": dt.now(),
-                    "variants": variants,
-                    "state": "new"
-                }
+                    file_url=file_url,
+                    start_date=dt.now(),
+                    variants=variants,
+                    state="new"
             )
 
             data = unique_id
@@ -57,4 +55,3 @@ class StateAudioClassifier():
 
 
 State = StateAudioClassifier()
-

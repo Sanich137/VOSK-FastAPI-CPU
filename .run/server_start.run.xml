@@ -5,8 +5,10 @@
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
+      <env name="Audio_path" value="/media/kojevnikov/Data/Recodniser/audio_files/" />
+      <env name="AUTH_TOKEN" value="token" />
+      <env name="DB_PATH" value="/media/kojevnikov/Data/Recodniser/db/" />
       <env name="PYTHONUNBUFFERED" value="1" />
-      <env name="AUTH_TOKEN" value="Amulex" />
     </envs>
     <option name="SDK_HOME" value="" />
     <option name="SDK_NAME" value="Python 3.10 (VOSK-FastAPI-CPU)" />

@@ -13,7 +13,7 @@ class Order(Base):
     __tablename__ = 'orders'
     id = sa.Column(sa.Integer, primary_key=True, unique=True, autoincrement=True)
     u_id = sa.Column(su.UUIDType(binary=False), default=uuid.uuid4)
-    erp_id = state = sa.Column(sa.String(9), default=None)
+    erp_id = sa.Column(sa.String(9), default=None)
     file_url = sa.Column(su.URLType, default=None)
     state = sa.Column(sa.String(15), default='New')  # New, inwork, completed
     inserted = sa.Column(sa.DateTime, default=datetime.now())

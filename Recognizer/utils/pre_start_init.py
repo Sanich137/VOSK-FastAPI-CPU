@@ -38,12 +38,12 @@ paths = {
     "db": db,
 }
 
-
-class StateAudioClassifier:
-    def __init__(self):
-        self.request_limit = buffer_size
-        self.request_data = dict()
-
-
-State = StateAudioClassifier()
-
+#
+# class StateAudioClassifier:
+#     def __init__(self):
+#         self.request_limit = buffer_size
+#         self.request_data = dict()
+#
+#
+# State = StateAudioClassifier()
+#
