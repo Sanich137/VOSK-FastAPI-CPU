@@ -1,6 +1,8 @@
-#sqlalchemy
-#sqlalchemy-utils
-#PyMySQL
+sqlalchemy
+sqlalchemy-utils
+# alembic
+PyMySQL
+
 httpx
 pathlib
 
