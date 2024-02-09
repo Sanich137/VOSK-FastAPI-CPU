@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 import os
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.sql import and_, or_
@@ -22,6 +23,14 @@ class DataBase:
 
     def set_db_path(self):
         db = 'sqlite:///' + str(paths.get("db"))
+        if paths.get("db").exists():
+            print(f'НУ В ЦЕЛОМ БД НА МЕСТЕ - {str(paths.get("db"))}')
+            logging.error(f'НУ В ЦЕЛОМ БД НА МЕСТЕ - {str(paths.get("db"))}')
+        else:
+            print(f'БАЗЫ НЕТ ВОВСЕ! - {str(paths.get("db"))}')
+            logging.error(f'БАЗЫ НЕТ ВОВСЕ! - {str(paths.get("db"))}')
+
+        print(db)
         # db = 'mysql+pymysql://akojevnikov:zb5vdbpH0LL1Hxk8@192.168.94.61/kojevnikov_db'
         return db  # db
 
