@@ -17,6 +17,8 @@ from Recognizer.utils.pre_start_init import paths
 
 
 def offline_recognition(file_name, model_type, is_async=False, task_id=None, state=None):
+    full_json_data = list()
+    full_text = list()
 
     if not file_name:
         file_path = paths.get('test_file')
@@ -31,39 +33,31 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
         logging.debug(f'Файл принят в работу')
         samples = sound.get_array_of_samples()
 
-        # Разбиваем звук на два канала
-
-        # todo - получать в запросе данные по аудио (моно/стерео)
+        # Разбиваем звук по каналам
         channels = sound.channels
 
-        if channels != 1:
-            separate_channels = sound.split_to_mono()
-
-            client_channel = separate_channels[0]
-            lawyer_channel = separate_channels[1]
-            frame_rate = lawyer_channel.frame_rate
-            # Делаем звук в моно
-            mono = lawyer_channel.set_channels(1)
-        else:
-            frame_rate = sound.frame_rate
-            # Делаем звук в моно
-            mono = sound.set_channels(1)
-            frame_rate = mono.frame_rate
-        logging.debug(f"разобрались с каналами")
-
+        separate_channels = sound.split_to_mono()
+        frame_rate = sound.frame_rate
         offline_recognizer = KaldiRecognizer(vosk_models[model_type], frame_rate, )
         offline_recognizer.SetWords(enable_words=True)
         # offline_recognizer.GPUInit()
         offline_recognizer.SetNLSML(enable_nlsml=True)
-        logging.debug(f'Передаём аудио на распознавание')
-        offline_recognizer.AcceptWaveform(mono.raw_data)
-        logging.debug(f"Обработали аудио")
+        logging.debug(f"Инициировали Kadli")
 
-        # для дальнейшей разработки с разбивкой по словам
-        # raw_data = json.loads(offline_recognizer.Result())
+        for channel in range(channels):
 
-        recognized_text = json.loads(offline_recognizer.Result())['text'] + ' '
-        logging.debug(f"Результат распознавания текста - {recognized_text}")
+            logging.debug(f'Передаём аудио на распознавание канал № {channel+1}')
+            offline_recognizer.AcceptWaveform(separate_channels[channel].raw_data)
+            logging.debug(f"Обработали аудио канал № {channel+1}")
+
+            raw_data = json.loads(offline_recognizer.Result())
+            json_text_data = raw_data['result']
+            recognized_text = raw_data['text']
+            logging.debug(f"Результат распознавания текста - {recognized_text}")
+            full_json_data.append(json_text_data)
+            full_text.append(recognized_text)
+
+
         # Добавляем пунктуацию
         # cased = subprocess.check_output('python3 recasepunc/recasepunc.py predict recasepunc/checkpoint', shell=True,
         #                                  text=True, input=recognized_text)
@@ -72,10 +66,10 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
 
         if not is_async:
             logging.debug(f'Передал распознанный текст в response')
-            return recognized_text
+            return full_text
         else:
             logging.debug(state.request_data)
-            state.request_data[task_id]['recognised_text'] = recognized_text
+            state.request_data[task_id]['recognised_text'] = full_text
             state.request_data[task_id]['state'] = 'text_successfully_recognised'
 
 if __name__ == '__main__':

@@ -109,7 +109,7 @@ async def async_audio_recognise_new_task(new_async_task: AsyncAudioRequestNewTas
     return response
 
 @app.post("/async_audio_recognise/get_result")
-async def async_audio_recognise_get_result(get_res_async_task:AsyncAudioRequestGetResult):
+async def async_audio_recognise_get_result(get_res_async_task: AsyncAudioRequestGetResult):
     logging.debug('enter_async_audio_classify')
     auth_state = False
     task_id = get_res_async_task.task_id
