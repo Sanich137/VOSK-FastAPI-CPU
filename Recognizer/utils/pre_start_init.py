@@ -11,7 +11,8 @@ from datetime import datetime as dt
 from config import buffer_size
 
 auth_token = os.environ.get("AUTH_TOKEN")  # Не очень безопасно. Не для промышленного использования.
-unix_db = Path(os.environ.get("DB_PATH"))  # linux
+
+unix_db = Path(os.environ.get("DB_PATH", ''))  # linux
 Win_base_dir = Path(__file__).resolve().parent.parent
 
 if platform == "linux" or platform == "linux2":

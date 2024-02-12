@@ -66,7 +66,7 @@ async def async_audio_recognise_new_task(new_async_task: AsyncAudioRequestNewTas
     else:
         auth_state = True
 
-    if new_async_task.model_type not in ['vosk_small', 'vosk_full', 'vosk_adapted']:
+    if new_async_task.use_model not in ['vosk_small', 'vosk_full']:  # , 'vosk_adapted'
         error_description = "wrong model type chosen"
     else:
         correct_model = True
@@ -89,14 +89,17 @@ async def async_audio_recognise_new_task(new_async_task: AsyncAudioRequestNewTas
                 error_description = State.request_data[task_id]['state']
     if have_file:
         # В функции не забыть удалить файл
+        await db.add_order_to_base(task_id)
+        State.request_data[task_id]['model'] = new_async_task.use_model
+        State.request_data[task_id]['error'] = False
+
         background_tasks.add_task(offline_recognition,
                                   new_async_task.AudioFileUrl.path.split('/')[-1],
-                                  new_async_task.model_type,
+                                  new_async_task.use_model,
                                   is_async=True,
                                   task_id=task_id,
                                   state=State)
-        State.request_data[task_id]['error'] = False
-        await db.add_order_to_base(task_id)
+
         error = False
 
     response = {"error": error,
@@ -110,7 +113,7 @@ async def async_audio_recognise_new_task(new_async_task: AsyncAudioRequestNewTas
 
 @app.post("/async_audio_recognise/get_result")
 async def async_audio_recognise_get_result(get_res_async_task: AsyncAudioRequestGetResult):
-    logging.debug('enter_async_audio_classify')
+    logging.debug('enter_async_get_result')
     auth_state = False
     task_id = get_res_async_task.task_id
     error_description = None
@@ -124,20 +127,16 @@ async def async_audio_recognise_get_result(get_res_async_task: AsyncAudioRequest
         auth_state = True
 
     if auth_state:
-        question = State.request_data[task_id].get('recognised_text', '')
-        if len(question) > 0:
-            cat_ids, cat_names = await define_category(question, State.request_data[task_id].get('variants'))
-            data = {
-                'cat_ids': cat_ids,
-                'cat_names': cat_names,
-                'recognised_text': question
+        dialogue = State.request_data[task_id].get('recognised_text', '')
+        data = {
+                'recognised_text': dialogue
                 }
 
     # Удалить файл
-    file_to_delete = State.request_data[task_id].get('file_url')
-    if file_to_delete:
-        await del_audio_file(file_url=file_to_delete)
-
+    # file_to_delete = State.request_data[task_id].get('file_url')
+    # if file_to_delete:
+    #     await del_audio_file(file_url=file_to_delete)
+    #
     if not reuse:
         State.request_data.pop(task_id)
         logging.debug(f'Заказ № {task_id} удалён из списка отслеживаемых')
@@ -146,9 +145,7 @@ async def async_audio_recognise_get_result(get_res_async_task: AsyncAudioRequest
                 "error_description": error_description,
                 "data": data
                 }
-
     logging.debug(f'response data - {data}')
-
     return response
 
 @app.get("/")

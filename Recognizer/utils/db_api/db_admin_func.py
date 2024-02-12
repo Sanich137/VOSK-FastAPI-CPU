@@ -4,7 +4,7 @@ from Recognizer.models import db_models as models
 from Recognizer.utils.pre_start_init import paths
 
 def make_clear_base(db):
-    engine = create_engine(db)
+    engine = create_engine(db, json_deserializer=False)
     Base = models.Base
     Base.metadata.create_all(engine)
     return True

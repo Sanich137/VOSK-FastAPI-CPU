@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import json
 import os
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.sql import and_, or_
@@ -18,21 +19,20 @@ from datetime import datetime, timedelta
 class DataBase:
     def __init__(self):
         self.db_path = self.set_db_path()
-        self.engine = create_engine(self.db_path, pool_pre_ping=True, json_serializer=True)
+        self.engine = create_engine(self.db_path, pool_pre_ping=True,
+                                    )
         self.session = Session(bind=self.engine)
 
     def set_db_path(self):
-        db = 'sqlite:///' + str(paths.get("db"))
+        database = 'sqlite:///' + str(paths.get("db"))
         if paths.get("db").exists():
-            print(f'НУ В ЦЕЛОМ БД НА МЕСТЕ - {str(paths.get("db"))}')
-            logging.error(f'НУ В ЦЕЛОМ БД НА МЕСТЕ - {str(paths.get("db"))}')
+            logging.debug(f'НУ В ЦЕЛОМ БД НА МЕСТЕ - {str(paths.get("db"))}')
         else:
-            print(f'БАЗЫ НЕТ ВОВСЕ! - {str(paths.get("db"))}')
             logging.error(f'БАЗЫ НЕТ ВОВСЕ! - {str(paths.get("db"))}')
 
-        print(db)
+        logging.debug(f'Указан адрес БД - {database}')
         # db = 'mysql+pymysql://akojevnikov:zb5vdbpH0LL1Hxk8@192.168.94.61/kojevnikov_db'
-        return db  # db
+        return database
 
     async def add_order_to_base(self, data):
         with self.session as sess:
@@ -72,6 +72,50 @@ class DataBase:
                 }
             else:
                 print(f'Добавили заказ(ы) в базу')
+                res = {
+                    "state": True,
+                    "Error": None
+                }
+        return res
+
+    def add_raw_recognition_to_base(self, data):
+        with self.session as sess:
+            u_id = data
+            orders_data = LongTimeWorker.State.request_data[u_id]
+
+
+            recognition_data = {
+                "orderID": u_id,
+                "json_raw": str(orders_data.get("json_raw_data")),
+                'recognised_text': str(orders_data.get("recognised_text")),
+                'model': orders_data.get("model"),
+                "last_update_date": datetime.now(),
+
+                #            json_dialogue = sa.Column(su.JSONType, default=None)
+                #            json_punctuation_lawyer = sa.Column(sa.Text(), default=None)
+                #            json_punctuation_client = sa.Column(sa.Text(), default=None)
+            }
+
+            data_exist = sess.query(Recognitions).filter(Recognitions.orderID == u_id,
+                                                         Recognitions.model == orders_data.get("model"))
+
+            if sess.query(data_exist.exists()).scalar():
+                data_exist.update(recognition_data,
+                                  synchronize_session='fetch')
+            else:
+                sess.add(Recognitions(**recognition_data))
+
+            try:
+                sess.commit()
+                sess.close()
+            except Exception as e:
+                print(f'При добавлении Заказа возникла ошибка {e}')
+                res = {
+                    "state": False,
+                    "Error": e[0:20]
+                }
+            else:
+                print(f'Добавили результаты распознавания в базу')
                 res = {
                     "state": True,
                     "Error": None

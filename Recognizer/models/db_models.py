@@ -25,7 +25,9 @@ class Recognitions(Base):
     __tablename__ = 'recognitions'
     id = sa.Column(sa.Integer, primary_key=True, unique=True, autoincrement=True)
     orderID = sa.Column(sa.Integer, sa.ForeignKey('orders.id'))  # Внешник
-    json_raw = sa.Column(su.JSONType, default=None)
+    json_raw = sa.Column(sa.Text, default=None)
+    recognised_text = sa.Column(sa.Text, default=None)
+    model = sa.Column(sa.String(30), default=None)
     json_dialogue = sa.Column(su.JSONType, default=None)
     json_punctuation_lawyer = sa.Column(sa.Text(), default=None)
     json_punctuation_client = sa.Column(sa.Text(), default=None)

@@ -20,7 +20,7 @@ class AsyncAudioRequestNewTask(BaseModel):
     auth: str  # token
     AudioFileUrl: HttpUrl
     variants: Union[int, None] = 3
-    model_type: str = "vosk_small"
+    use_model: str = "vosk_small"
 
 
 class AsyncAudioRequestGetResult(BaseModel):
