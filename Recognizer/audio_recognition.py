@@ -17,8 +17,9 @@ from Recognizer.models.vosk_model import vosk_models
 from Recognizer.utils.pre_start_init import paths
 from Recognizer.utils.db_api.db_worker import db
 
+
 def offline_recognition(file_name, model_type, is_async=False, task_id=None, state=None):
-    time_rec_start =datetime.now()
+    time_rec_start = datetime.now()
     json_raw_data = list()
     full_text = list()
 
@@ -34,7 +35,7 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
     else:
         logging.debug(f'Файл принят в работу')
         samples = sound.get_array_of_samples()
-
+        logging.info(f' общая продолжительность аудиофайла {sound.duration_seconds} сек.')
         # Разбиваем звук по каналам
         channels = sound.channels
 
@@ -50,7 +51,18 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
         try:
             for channel in range(channels):
                 logging.debug(f'Передаём аудио на распознавание канал № {channel+1}')
+                # Основная функция - принимаем весь файл. Возможно, будут траблы на больших файлах.
                 offline_recognizer.AcceptWaveform(separate_channels[channel].raw_data)
+
+                # Основная функция - c разбивкой на сэмплы (возможно, уменьшает нагрузку на ОЗУ)
+                # _from = 0
+                # _step = 4096
+                # _to = _step
+                # while _from < len(separate_channels[channel].raw_data):
+                #     offline_recognizer.AcceptWaveform(separate_channels[channel].raw_data[_from:_to])
+                #     _from = _to
+                #     _to += _step
+
                 logging.debug(f"Обработали аудио канал № {channel+1}")
 
                 raw_data = json.loads(offline_recognizer.Result())
@@ -81,11 +93,18 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
 
                 state.request_data[task_id]['state'] = 'text_successfully_recognised'
 
-            db.add_raw_recognition_to_base(task_id)
+            if db.add_raw_recognition_to_base(task_id).get('state'):
+                if not state.request_data[task_id]['reuse']:
+                    state.request_data.pop(task_id)
+                    logging.debug(f'Заказ № {task_id} удалён из списка отслеживаемых')
+            else:
+                logging.error(f'Не удалось сохранить результат распознавания - '
+                              f'{db.add_raw_recognition_to_base(task_id).get("Error")}')
 
 if __name__ == '__main__':
 
     data = offline_recognition('')
+
 
 "https://proglib.io/p/reshaem-zadachu-perevoda-russkoy-rechi-v-tekst-s-pomoshchyu-python-i-biblioteki-vosk-2022-06-30"
 "https://stackoverflow.com/questions/29547218/remove-silence-at-the-beginning-and-at-the-end-of-wave-files-with-pydub"

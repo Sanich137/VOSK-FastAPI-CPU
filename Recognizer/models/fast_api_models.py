@@ -19,8 +19,8 @@ class AsyncAudioRequestNewTask(BaseModel):
     """model_type = ['vosk_small', 'vosk_full', 'vosk_adapted']"""
     auth: str  # token
     AudioFileUrl: HttpUrl
-    variants: Union[int, None] = 3
     use_model: str = "vosk_small"
+    reuse: Union[bool, None] = False  # оставлять ли сведения о запросе в ответе или освобождать очередь
 
 
 class AsyncAudioRequestGetResult(BaseModel):

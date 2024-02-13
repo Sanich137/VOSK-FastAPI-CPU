@@ -74,7 +74,8 @@ async def async_audio_recognise_new_task(new_async_task: AsyncAudioRequestNewTas
     if auth_state and correct_model:
         reg_new_task = await State.reg_new_request(
             new_async_task.AudioFileUrl,
-            variants=new_async_task.variants)
+            reuse=new_async_task.reuse
+        )
         if reg_new_task.get('error') != "0":
             error_description = reg_new_task.get('error_description')
         else:

@@ -46,11 +46,9 @@ class DataBase:
                 inserted=datetime.now(),
                 updated=datetime.now(),
             )
-
-            user_exist = sess.query(Order).filter(Order.u_id == u_id)
-
-            if sess.query(user_exist.exists()).scalar():
-                user_exist.update(
+            order_exist = sess.query(Order).filter(Order.u_id == u_id)
+            if sess.query(order_exist.exists()).scalar():
+                order_exist.update(
                     {
                         'u_id': u_id,
                         'erp_id': orders_data.get(""),
@@ -82,29 +80,35 @@ class DataBase:
         with self.session as sess:
             u_id = data
             orders_data = LongTimeWorker.State.request_data[u_id]
-
-
             recognition_data = {
                 "orderID": u_id,
                 "json_raw": str(orders_data.get("json_raw_data")),
                 'recognised_text': str(orders_data.get("recognised_text")),
                 'model': orders_data.get("model"),
                 "last_update_date": datetime.now(),
-
-                #            json_dialogue = sa.Column(su.JSONType, default=None)
-                #            json_punctuation_lawyer = sa.Column(sa.Text(), default=None)
-                #            json_punctuation_client = sa.Column(sa.Text(), default=None)
             }
 
-            data_exist = sess.query(Recognitions).filter(Recognitions.orderID == u_id,
-                                                         Recognitions.model == orders_data.get("model"))
+            # Обновляем текущи статус ордера. По идее, статус - лишнее, ну пусть будет
+            recognition_data_exist = sess.query(Recognitions).filter(Recognitions.orderID == u_id,
+                                                                     Recognitions.model == orders_data.get("model"))
 
-            if sess.query(data_exist.exists()).scalar():
-                data_exist.update(recognition_data,
-                                  synchronize_session='fetch')
+            if sess.query(recognition_data_exist.exists()).scalar():
+                recognition_data_exist.update(recognition_data,
+                                              synchronize_session='fetch')
             else:
                 sess.add(Recognitions(**recognition_data))
 
+            # Обновляем текущий статус ордера. По идее, статус - лишнее, ну пусть будет
+            order_exist = sess.query(Order).filter(Order.u_id == u_id)
+            if sess.query(order_exist.exists()).scalar():
+                order_exist.update(
+                    {
+                        'state': orders_data.get("state"),
+                        'updated': datetime.now(),
+                    },
+                    synchronize_session='fetch')
+            else:
+                logging.error(f'нет подходящего ордера для обновления {u_id}')
             try:
                 sess.commit()
                 sess.close()

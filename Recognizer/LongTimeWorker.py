@@ -10,7 +10,7 @@ class StateAudioClassifier:
         self.request_data = dict()
 
 #
-    async def reg_new_request(self, file_url, variants) -> dict:
+    async def reg_new_request(self, file_url, reuse) -> dict:
         """
         Errors_list:
         0 - Отсутствует ошибка
@@ -40,7 +40,7 @@ class StateAudioClassifier:
             self.request_data[unique_id] = dict(
                     file_url=file_url,
                     start_date=dt.now(),
-                    variants=variants,
+                    reuse=reuse,
                     state="new"
             )
 
