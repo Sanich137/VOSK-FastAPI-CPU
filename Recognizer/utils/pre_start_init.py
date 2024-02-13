@@ -9,6 +9,10 @@ from pathlib import Path
 import uuid
 from datetime import datetime as dt
 from config import buffer_size
+from Recognizer.utils.recasepunc import CasePuncPredictor
+from transformers import logging as l
+l.set_verbosity_error()
+
 
 auth_token = os.environ.get("AUTH_TOKEN")  # Не очень безопасно. Не для промышленного использования.
 
@@ -32,6 +36,8 @@ paths = {
     "model_punctuation": Win_base_dir.parent / 'vosk_models_files' / 'vosk-recasepunc-ru-0.22' / 'checkpoint',
     "db": db,
 }
+
+punctuation_model = CasePuncPredictor(paths.get('model_punctuation'), lang="ru")
 
 
 # class StateAudioClassifier:

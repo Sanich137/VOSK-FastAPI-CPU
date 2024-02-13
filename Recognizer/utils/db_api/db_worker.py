@@ -63,13 +63,13 @@ class DataBase:
                 sess.commit()
                 sess.close()
             except Exception as e:
-                print(f'При добавлении Заказа возникла ошибка {e}')
+                logging.debug(f'При добавлении Заказа {u_id} возникла ошибка {e}')
                 res = {
                     "state": False,
                     "Error": e[0:20]
                 }
             else:
-                print(f'Добавили заказ(ы) в базу')
+                logging.debug(f'Добавили заказ(ы) {u_id} в базу')
                 res = {
                     "state": True,
                     "Error": None
@@ -84,6 +84,7 @@ class DataBase:
                 "orderID": u_id,
                 "json_raw": str(orders_data.get("json_raw_data")),
                 'recognised_text': str(orders_data.get("recognised_text")),
+                'punctuated_text': str(orders_data.get("punctuated_text")),
                 'model': orders_data.get("model"),
                 "last_update_date": datetime.now(),
             }
@@ -113,13 +114,13 @@ class DataBase:
                 sess.commit()
                 sess.close()
             except Exception as e:
-                print(f'При добавлении Заказа возникла ошибка {e}')
+                logging.error(f'При добавлении Заказа возникла ошибка {e}')
                 res = {
                     "state": False,
                     "Error": e[0:20]
                 }
             else:
-                print(f'Добавили результаты распознавания в базу')
+                logging.debug(f'Добавили результаты распознавания в базу')
                 res = {
                     "state": True,
                     "Error": None

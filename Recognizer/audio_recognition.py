@@ -13,12 +13,12 @@ from pydub import AudioSegment
 from vosk import Model, KaldiRecognizer
 
 from Recognizer.models.vosk_model import vosk_models
-
 from Recognizer.utils.pre_start_init import paths
 from Recognizer.utils.db_api.db_worker import db
-from Recognizer.utils.recasepunc import CasePuncPredictor
-from Recognizer.utils.recasepunc import WordpieceTokenizer
-from Recognizer.utils.recasepunc import Config
+from Recognizer.utils.pre_start_init import punctuation_model
+
+from transformers import logging as l
+l.set_verbosity_error()
 
 
 def offline_recognition(file_name, model_type, is_async=False, task_id=None, state=None):
@@ -37,7 +37,7 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
         print(e)
     else:
         logging.debug(f'Файл принят в работу')
-        samples = sound.get_array_of_samples()
+        # samples = sound.get_array_of_samples()
         logging.info(f' общая продолжительность аудиофайла {sound.duration_seconds} сек.')
         # Разбиваем звук по каналам
         channels = sound.channels
@@ -78,48 +78,53 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
         except Exception as e:
             state.request_data[task_id]['state'] = f'recognition error - {e[:100]}'
         else:
-            logging.debug(f'На обработку файла затрачено - {datetime.now()-time_rec_start} сек.')
-
+            # Добавляем пунктуацию
+            punctuated_text = offline_punctuation(full_text)
 
             if not is_async:
                 logging.debug(f'Передал распознанный текст в response')
-                return full_text
+                return punctuated_text
             else:
-                logging.debug(state.request_data)
+                # logging.debug(state.request_data)
                 state.request_data[task_id]['recognised_text'] = full_text
+                state.request_data[task_id]['punctuated_text'] = punctuated_text
                 state.request_data[task_id]['json_raw_data'] = json_raw_data
-
                 state.request_data[task_id]['state'] = 'text_successfully_recognised'
 
-            if db.add_raw_recognition_to_base(task_id).get('state'):
-                if not state.request_data[task_id]['reuse']:
-                    state.request_data.pop(task_id)
-                    logging.debug(f'Заказ № {task_id} удалён из списка отслеживаемых')
+            # Сохраняем результат в БД
+            db.add_raw_recognition_to_base(task_id).get('state')
+
+            if not state.request_data[task_id]['reuse']:
+                state.request_data.pop(task_id)
+                logging.debug(f'Заказ № {task_id} удалён из списка отслеживаемых')
+
+            logging.debug(f'На обработку файла затрачено - {datetime.now() - time_rec_start} сек.')
+
+
+def offline_punctuation(full_text):
+    predictor = punctuation_model
+    full_res = list()
+    for text in full_text:
+        tokens = list(enumerate(predictor.tokenize(text)))
+
+        results = ""
+        for token, case_label, punc_label in predictor.predict(tokens, lambda x: x[1]):
+            prediction = predictor.map_punc_label(predictor.map_case_label(token[1], case_label), punc_label)
+            if token[1][0] != '#':
+                results = results + ' ' + prediction
             else:
-                logging.error(f'Не удалось сохранить результат распознавания - '
-                              f'{db.add_raw_recognition_to_base(task_id).get("Error")}')
+                results = results + prediction
 
-            # Добавляем пунктуацию
-            # todo - вынести в отдельную функцию/роут
-            predictor = CasePuncPredictor(paths.get('model_punctuation'), lang="ru")
+        punct_rec = str(results.strip())
+        logging.debug(f'Текст с пунктуацией - {punct_rec}')
+        full_res.append(punct_rec)
 
-            for text in full_text:
-                tokens = list(enumerate(predictor.tokenize(text)))
-
-                results = ""
-                for token, case_label, punc_label in predictor.predict(tokens, lambda x: x[1]):
-                    prediction = predictor.map_punc_label(predictor.map_case_label(token[1], case_label), punc_label)
-                    if token[1][0] != '#':
-                        results = results + ' ' + prediction
-                    else:
-                        results = results + prediction
-
-                logging.info(f'Текст с пунктуацией - {results.strip()}')
-
+    return full_res
 
 if __name__ == '__main__':
 
     data = offline_recognition('')
+
 
 
 "https://proglib.io/p/reshaem-zadachu-perevoda-russkoy-rechi-v-tekst-s-pomoshchyu-python-i-biblioteki-vosk-2022-06-30"

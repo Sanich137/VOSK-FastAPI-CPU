@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, func
 from Recognizer.models import db_models as models
-
 from Recognizer.utils.pre_start_init import paths
+
 
 def make_clear_base(db):
     engine = create_engine(db, json_deserializer=False)
