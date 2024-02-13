@@ -29,10 +29,11 @@ paths = {
     "audio_archive_folder": Win_base_dir.parent / 'Audio_archive_folder',
     "model_dir_small": Win_base_dir.parent / 'vosk_models_files' / 'vosk-model-small-ru-0.22',
     "model_dir_complete": Win_base_dir.parent / 'vosk_models_files' / 'vosk-model-ru-0.42',
+    "model_punctuation": Win_base_dir.parent / 'vosk_models_files' / 'vosk-recasepunc-ru-0.22' / 'checkpoint',
     "db": db,
 }
 
-#
+
 # class StateAudioClassifier:
 #     def __init__(self):
 #         self.request_limit = buffer_size
@@ -40,4 +41,3 @@ paths = {
 #
 #
 # State = StateAudioClassifier()
-#

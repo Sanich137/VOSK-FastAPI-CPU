@@ -16,6 +16,9 @@ from Recognizer.models.vosk_model import vosk_models
 
 from Recognizer.utils.pre_start_init import paths
 from Recognizer.utils.db_api.db_worker import db
+from Recognizer.utils.recasepunc import CasePuncPredictor
+from Recognizer.utils.recasepunc import WordpieceTokenizer
+from Recognizer.utils.recasepunc import Config
 
 
 def offline_recognition(file_name, model_type, is_async=False, task_id=None, state=None):
@@ -77,11 +80,6 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
         else:
             logging.debug(f'На обработку файла затрачено - {datetime.now()-time_rec_start} сек.')
 
-            # Добавляем пунктуацию
-            # cased = subprocess.check_output('python3 recasepunc/recasepunc.py predict recasepunc/checkpoint', shell=True,
-            #                                  text=True, input=recognized_text)
-            #
-            # logging.debug(f"Результат распознавания текста - {cased}")
 
             if not is_async:
                 logging.debug(f'Передал распознанный текст в response')
@@ -100,6 +98,24 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
             else:
                 logging.error(f'Не удалось сохранить результат распознавания - '
                               f'{db.add_raw_recognition_to_base(task_id).get("Error")}')
+
+            # Добавляем пунктуацию
+            # todo - вынести в отдельную функцию/роут
+            predictor = CasePuncPredictor(paths.get('model_punctuation'), lang="ru")
+
+            for text in full_text:
+                tokens = list(enumerate(predictor.tokenize(text)))
+
+                results = ""
+                for token, case_label, punc_label in predictor.predict(tokens, lambda x: x[1]):
+                    prediction = predictor.map_punc_label(predictor.map_case_label(token[1], case_label), punc_label)
+                    if token[1][0] != '#':
+                        results = results + ' ' + prediction
+                    else:
+                        results = results + prediction
+
+                logging.info(f'Текст с пунктуацией - {results.strip()}')
+
 
 if __name__ == '__main__':
 

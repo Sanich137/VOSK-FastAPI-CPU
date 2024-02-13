@@ -15,6 +15,9 @@ from Recognizer.utils.pre_start_init import auth_token
 from Recognizer.models import AsyncAudioRequestNewTask, AsyncAudioRequestGetResult
 from Recognizer.LongTimeWorker import State
 
+from Recognizer.utils.recasepunc import CasePuncPredictor
+from Recognizer.utils.recasepunc import WordpieceTokenizer
+from Recognizer.utils.recasepunc import Config
 
 # Сервер от FastAPI ниже декораторы, для отлавливания событий его сервера
 
