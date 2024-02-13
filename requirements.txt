@@ -5,8 +5,9 @@ PyMySQL
 
 httpx
 pathlib
+ujson
 
-uvicorn[standart]
+uvicorn
 fastapi
 pydantic
 

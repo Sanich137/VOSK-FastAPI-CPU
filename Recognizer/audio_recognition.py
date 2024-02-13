@@ -5,7 +5,7 @@ import logging
 import wave  # создание и чтение аудиофайлов формата wav
 from sys import platform
 
-import json  # работа с json-файлами и json-строками
+import ujson  # работа с json-файлами и json-строками
 
 from pydub import AudioSegment
 
@@ -67,8 +67,8 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
                 #     _to += _step
 
                 logging.debug(f"Обработали аудио канал № {channel+1}")
+                raw_data = ujson.loads(offline_recognizer.Result())
 
-                raw_data = json.loads(offline_recognizer.Result())
                 json_text_data = raw_data['result']
                 recognized_text = raw_data['text']
                 logging.debug(f"Результат распознавания текста - {recognized_text}")
