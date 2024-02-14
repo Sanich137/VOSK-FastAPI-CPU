@@ -55,7 +55,8 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
             for channel in range(channels):
                 logging.debug(f'Передаём аудио на распознавание канал № {channel+1}')
                 # Основная функция - принимаем весь файл. Возможно, будут траблы на больших файлах.
-
+                offline_recognizer.Reset()
+                logging.debug(f'сбросили состояние')
                 offline_recognizer.AcceptWaveform(separate_channels[channel].raw_data)
 
                 # Основная функция - c разбивкой на сэмплы (возможно, уменьшает нагрузку на ОЗУ)
@@ -70,12 +71,11 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
                 logging.debug(f"Обработали аудио канал № {channel+1} за {datetime.now() - time_rec_start} сек.")
 
                 # raw_data = ujson.loads(offline_recognizer.Result())
-
+                # Попробовать перевести в async
                 temp_raw = offline_recognizer.FinalResult()
                 logging.debug(f'Получили результат из offline_recognizer в строку')
                 raw_data = ujson.loads(temp_raw)
                 logging.debug(f'Получили результат из строки в json')
-
 
                 json_text_data = raw_data['result']
                 recognized_text = raw_data['text']
