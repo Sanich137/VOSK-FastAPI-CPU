@@ -66,7 +66,7 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
                 #     _from = _to
                 #     _to += _step
 
-                logging.debug(f"Обработали аудио канал № {channel+1}")
+                logging.debug(f"Обработали аудио канал № {channel+1} за {datetime.now() - time_rec_start} сек.")
                 raw_data = ujson.loads(offline_recognizer.Result())
 
                 json_text_data = raw_data['result']
@@ -110,6 +110,7 @@ def offline_punctuation(full_text):
         results = ""
         for token, case_label, punc_label in predictor.predict(tokens, lambda x: x[1]):
             prediction = predictor.map_punc_label(predictor.map_case_label(token[1], case_label), punc_label)
+            # Лишний пробел перед всем кроме точки и зпт.
             if token[1][0] != '#':
                 results = results + ' ' + prediction
             else:

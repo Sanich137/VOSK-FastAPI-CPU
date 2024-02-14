@@ -16,7 +16,7 @@ from Recognizer.audio_recognition import offline_recognition
 from Recognizer.utils.pre_start_init import auth_token
 from Recognizer.models import AsyncAudioRequestNewTask, AsyncAudioRequestGetResult
 from Recognizer.LongTimeWorker import State
-
+from Recognizer.models.vosk_model import vosk_models
 
 # Сервер от FastAPI ниже декораторы, для отлавливания событий его сервера
 
@@ -68,7 +68,7 @@ async def async_audio_recognise_new_task(new_async_task: AsyncAudioRequestNewTas
     else:
         auth_state = True
 
-    if new_async_task.use_model not in ['vosk_small', 'vosk_full']:  # , 'vosk_adapted'
+    if new_async_task.use_model not in vosk_models.keys():  # , 'vosk_adapted'
         error_description = "wrong model type chosen"
     else:
         correct_model = True
