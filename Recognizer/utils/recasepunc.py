@@ -15,6 +15,7 @@ import argparse
 from torch.utils.data import TensorDataset, DataLoader
 
 from transformers import AutoModel, AutoTokenizer, BertTokenizer
+# from transformers.models.bert import WordpieceTokenizer
 
 default_config = argparse.Namespace(
     seed=871253,

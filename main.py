@@ -14,12 +14,12 @@ from Recognizer.get_audio_file import del_audio_file
 from Recognizer.audio_recognition import offline_recognition
 
 from Recognizer.utils.pre_start_init import auth_token
-from Recognizer.models import AsyncAudioRequestNewTask, AsyncAudioRequestGetResult
+from Recognizer.models.fast_api_models import AsyncAudioRequestNewTask, AsyncAudioRequestGetResult
 from Recognizer.LongTimeWorker import State
 from Recognizer.models.vosk_model import vosk_models
 
-# Сервер от FastAPI ниже декораторы, для отлавливания событий его сервера
 
+# Сервер от FastAPI ниже декораторы, для отлавливания событий его сервера
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # on_start

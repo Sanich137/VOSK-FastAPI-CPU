@@ -2,8 +2,8 @@
 from datetime import datetime
 import logging
 
-import wave  # создание и чтение аудиофайлов формата wav
-from sys import platform
+# import wave  # создание и чтение аудиофайлов формата wav
+# from sys import platform
 
 import ujson  # работа с json-файлами и json-строками
 
@@ -17,8 +17,8 @@ from Recognizer.utils.pre_start_init import paths
 from Recognizer.utils.db_api.db_worker import db
 from Recognizer.utils.pre_start_init import punctuation_model
 
-from transformers import logging as l
-l.set_verbosity_error()
+from transformers import logging as logg
+logg.set_verbosity_error()
 
 
 def offline_recognition(file_name, model_type, is_async=False, task_id=None, state=None):
@@ -48,13 +48,14 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
         offline_recognizer = KaldiRecognizer(vosk_models[model_type], frame_rate, )
         offline_recognizer.SetWords(enable_words=True)
         # offline_recognizer.GPUInit()
-        offline_recognizer.SetNLSML(enable_nlsml=True)
+        offline_recognizer.SetNLSML(enable_nlsml=False)
         logging.debug(f"Инициировали Kadli")
 
         try:
             for channel in range(channels):
                 logging.debug(f'Передаём аудио на распознавание канал № {channel+1}')
                 # Основная функция - принимаем весь файл. Возможно, будут траблы на больших файлах.
+
                 offline_recognizer.AcceptWaveform(separate_channels[channel].raw_data)
 
                 # Основная функция - c разбивкой на сэмплы (возможно, уменьшает нагрузку на ОЗУ)
@@ -67,7 +68,14 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
                 #     _to += _step
 
                 logging.debug(f"Обработали аудио канал № {channel+1} за {datetime.now() - time_rec_start} сек.")
-                raw_data = ujson.loads(offline_recognizer.Result())
+
+                # raw_data = ujson.loads(offline_recognizer.Result())
+
+                temp_raw = offline_recognizer.FinalResult()
+                logging.debug(f'Получили результат из offline_recognizer в строку')
+                raw_data = ujson.loads(temp_raw)
+                logging.debug(f'Получили результат из строки в json')
+
 
                 json_text_data = raw_data['result']
                 recognized_text = raw_data['text']

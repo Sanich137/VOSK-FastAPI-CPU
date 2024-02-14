@@ -4,9 +4,9 @@ import uuid
 
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+#from sqlalchemy.orm import relationship
 from datetime import datetime
-from sqlalchemy_utils import UUIDType
+#from sqlalchemy_utils import UUIDType
 Base = declarative_base()
 
 class Order(Base):

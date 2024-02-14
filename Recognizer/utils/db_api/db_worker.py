@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 import logging
-import json
-import os
+#import json
+#import os
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.sql import and_, or_
+#from sqlalchemy.sql import and_, or_
 from Recognizer.utils.pre_start_init import paths
 from Recognizer.models.db_models import Order, Recognitions
 from Recognizer import LongTimeWorker
 
 # import pymysql
-from sqlalchemy import select, delete, create_engine, MetaData, Table, Integer, String, \
-    Column, DateTime, ForeignKey, Numeric, SmallInteger, Boolean, sql, func, update, desc
+from sqlalchemy import create_engine
+    # select, delete, create_engine, MetaData, Table, Integer, String, Column, DateTime, ForeignKey, Numeric, SmallInteger, Boolean, sql, func, update, desc
 
-import config
 from datetime import datetime, timedelta
 
 
