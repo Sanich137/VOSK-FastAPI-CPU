@@ -46,9 +46,9 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
         frame_rate = sound.frame_rate
         logging.debug(f'Используем модель - {model_type}')
         offline_recognizer = KaldiRecognizer(vosk_models[model_type], frame_rate, )
-        offline_recognizer.SetWords(enable_words=True)
+        offline_recognizer.SetWords(True)
         # offline_recognizer.GPUInit()
-        offline_recognizer.SetNLSML(enable_nlsml=False)
+        # offline_recognizer.SetNLSML(enable_nlsml=False)
         logging.debug(f"Инициировали Kadli")
 
         try:
