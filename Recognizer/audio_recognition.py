@@ -39,16 +39,22 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
         logging.debug(f'Файл принят в работу')
         # samples = sound.get_array_of_samples()
         logging.info(f' общая продолжительность аудиофайла {sound.duration_seconds} сек.')
+        # фреймрейт на входе
+        logging.debug(f'Исходный фреймрейт аудио - {sound.frame_rate}')
+
+        # Меняем фреймрейт на 16кГц
+        sound = sound.set_frame_rate(16000)
+        logging.debug(f'Изменённый фреймрейт аудио - {sound.frame_rate}')
+        # frame_rate = sound.frame_rate
         # Разбиваем звук по каналам
         channels = sound.channels
-
         separate_channels = sound.split_to_mono()
-        frame_rate = sound.frame_rate
+
         logging.debug(f'Используем модель - {model_type}')
-        offline_recognizer = KaldiRecognizer(vosk_models[model_type], frame_rate, )
+        offline_recognizer = KaldiRecognizer(vosk_models[model_type], sound.frame_rate, )
         offline_recognizer.SetWords(True)
         # offline_recognizer.GPUInit()
-        # offline_recognizer.SetNLSML(enable_nlsml=False)
+        offline_recognizer.SetNLSML(enable_nlsml=True)
         logging.debug(f"Инициировали Kadli")
 
         try:
@@ -57,7 +63,7 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
                 # Основная функция - принимаем весь файл. Возможно, будут траблы на больших файлах.
                 offline_recognizer.Reset()
                 logging.debug(f'сбросили состояние')
-                offline_recognizer.AcceptWaveform(separate_channels[channel].raw_data)
+                offline_recognizer.AcceptWaveform(separate_channels[channel].raw_data,)
 
                 # Основная функция - c разбивкой на сэмплы (возможно, уменьшает нагрузку на ОЗУ)
                 # _from = 0
@@ -84,7 +90,7 @@ def offline_recognition(file_name, model_type, is_async=False, task_id=None, sta
                 full_text.append(recognized_text)
 
         except Exception as e:
-            state.request_data[task_id]['state'] = f'recognition error - {e[:100]}'
+            state.request_data[task_id]['state'] = f'recognition error - {e}'
         else:
             # Добавляем пунктуацию
             punctuated_text = offline_punctuation(full_text)
